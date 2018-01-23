@@ -4,6 +4,7 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/operators.hpp>
+#include <boost/serialization/strong_typedef.hpp>
 
 #include <cstdint>
 #include <iostream>
