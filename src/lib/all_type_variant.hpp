@@ -38,7 +38,7 @@ namespace detail {
   ((double,      Double,     "double"))   \
   ((std::string, String,     "string"))   \
   ((date,		 Date,		 "date"))	  \
-  ((timestamp,	 Timestamp,  "timestamp"))
+  ((datetime,	 Timestamp,  "timestamp"))
 // Type          Enum Value   String
 // clang-format on
 
