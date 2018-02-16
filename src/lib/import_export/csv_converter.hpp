@@ -108,10 +108,15 @@ inline std::function<int(const std::string&)> CsvConverter<int>::_get_conversion
 template <>
 inline std::function<int64_t(const std::string&)> CsvConverter<int64_t>::_get_conversion_function() {
   return [](const std::string& str) {
-    size_t pos;
-    auto converted = static_cast<int64_t>(std::stoll(str, &pos));
-    Assert(pos == str.size(), "Unprocessed characters found while converting to long: " + str);
-    return converted;
+    struct tm tm;
+    if(strptime(str.c_str(), "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
+      size_t pos;
+      auto converted = static_cast<int64_t>(std::stoll(str, &pos));
+      Assert(pos == str.size(), "Unprocessed characters found while converting to long: " + str);
+      return converted;
+    } else {
+      return static_cast<int64_t>(mktime(&tm));
+    }
   };
 }
 

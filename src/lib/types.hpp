@@ -189,6 +189,7 @@ enum class ExpressionType {
   Column,
   /*An identifier for a function, such as COUNT, MIN, MAX*/
   Function,
+  DatetimeFunction,
 
   /*A subselect*/
   Select,
@@ -230,6 +231,8 @@ enum class JoinMode { Inner, Left, Right, Outer, Cross, Natural, Self, Semi, Ant
 enum class UnionMode { Positions };
 
 enum class AggregateFunction { Min, Max, Sum, Avg, Count, CountDistinct };
+
+enum class DatetimeFunction { Year, Month, Day };
 
 enum class OrderByMode { Ascending, Descending, AscendingNullsLast, DescendingNullsLast };
 

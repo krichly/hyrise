@@ -40,6 +40,7 @@ const std::unordered_map<ExpressionType, std::string> expression_type_to_string 
     {ExpressionType::Placeholder, "Parameter"},
     {ExpressionType::Column, "Column"},
     {ExpressionType::Function, "Function"},
+    {ExpressionType::DatetimeFunction, "DateimeFunction"},
     {ExpressionType::Select, "Select"},
     /*Arithmetic operators*/
     {ExpressionType::Addition, "Addition"},
@@ -129,6 +130,13 @@ const boost::bimap<AggregateFunction, std::string> aggregate_function_to_string 
         {AggregateFunction::Avg, "AVG"},
         {AggregateFunction::Count, "COUNT"},
         {AggregateFunction::CountDistinct, "COUNT DISTINCT"},
+    });
+
+const boost::bimap<DatetimeFunction, std::string> datetime_function_to_string =
+    make_bimap<DatetimeFunction, std::string>({
+        {DatetimeFunction::Year, "YEAR"},
+        {DatetimeFunction::Month, "MONTH"},
+        {DatetimeFunction::Day, "DAY"},
     });
 
 const boost::bimap<DataType, std::string> data_type_to_string =
