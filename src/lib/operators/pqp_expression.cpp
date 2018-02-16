@@ -26,6 +26,7 @@ PQPExpression::PQPExpression(const std::shared_ptr<LQPExpression>& lqp_expressio
 
   _value = lqp_expression->_value;
   _aggregate_function = lqp_expression->_aggregate_function;
+  _datetime_function = lqp_expression->_datetime_function;
   _table_name = lqp_expression->_table_name;
   _value_placeholder = lqp_expression->_value_placeholder;
 

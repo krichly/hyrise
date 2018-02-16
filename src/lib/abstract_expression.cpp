@@ -26,6 +26,7 @@ std::shared_ptr<DerivedExpression> AbstractExpression<DerivedExpression>::deep_c
   auto deep_copy = std::make_shared<DerivedExpression>(_type);
   deep_copy->_value = _value;
   deep_copy->_aggregate_function = _aggregate_function;
+  deep_copy->_datetime_function = _datetime_function;
   deep_copy->_table_name = _table_name;
   deep_copy->_alias = _alias;
   deep_copy->_value_placeholder = _value_placeholder;
@@ -193,6 +194,13 @@ const std::string AbstractExpression<DerivedExpression>::description() const {
       }
       desc << "]";
       break;
+    case ExpressionType::DatetimeFunction:
+      desc << "[" << datetime_function_to_string.left.at(datetime_function()) << ": " << std::endl;
+      for (const auto& expr : aggregate_function_arguments()) {
+        desc << expr->description() << ", " << std::endl;
+      }
+      desc << "]";
+      break;
     case ExpressionType::Select:
       desc << "[" << alias_string << "]";
       break;
@@ -212,6 +220,13 @@ AggregateFunction AbstractExpression<DerivedExpression>::aggregate_function() co
   DebugAssert(_aggregate_function != std::nullopt,
               "Expression " + expression_type_to_string.at(_type) + " does not have an aggregate function");
   return *_aggregate_function;
+}
+
+template <typename DerivedExpression>
+DatetimeFunction AbstractExpression<DerivedExpression>::datetime_function() const {
+  DebugAssert(_datetime_function != std::nullopt,
+              "Expression " + expression_type_to_string.at(_type) + " does not have an datetime function");
+  return *_datetime_function;
 }
 
 template <typename DerivedExpression>
@@ -249,6 +264,9 @@ std::string AbstractExpression<DerivedExpression>::to_string(
       return "";
     case ExpressionType::Function:
       return aggregate_function_to_string.left.at(aggregate_function()) + "(" +
+             _aggregate_function_arguments[0]->to_string(input_column_names, true) + ")";
+    case ExpressionType::DatetimeFunction:
+      return datetime_function_to_string.left.at(datetime_function()) + "(" +
              _aggregate_function_arguments[0]->to_string(input_column_names, true) + ")";
     case ExpressionType::Star:
       return std::string("*");
@@ -321,7 +339,9 @@ bool AbstractExpression<DerivedExpression>::operator==(const AbstractExpression&
     }
   }
 
-  return _type == other._type && _value == other._value && _aggregate_function == other._aggregate_function &&
+  return _type == other._type && _value == other._value &&
+         _aggregate_function == other._aggregate_function &&
+         _datetime_function == other._datetime_function &&
          _table_name == other._table_name && _alias == other._alias;
 }
 
@@ -354,6 +374,17 @@ std::shared_ptr<DerivedExpression> AbstractExpression<DerivedExpression>::create
     const std::optional<std::string>& alias) {
   auto expression = std::make_shared<DerivedExpression>(ExpressionType::Function);
   expression->_aggregate_function = aggregate_function;
+  expression->_aggregate_function_arguments = function_arguments;
+  expression->_alias = alias;
+  return expression;
+}
+
+template <typename DerivedExpression>
+std::shared_ptr<DerivedExpression> AbstractExpression<DerivedExpression>::create_datetime_function(
+    DatetimeFunction datetime_function, const std::vector<std::shared_ptr<DerivedExpression>>& function_arguments,
+    const std::optional<std::string>& alias) {
+  auto expression = std::make_shared<DerivedExpression>(ExpressionType::DatetimeFunction);
+  expression->_datetime_function = datetime_function;
   expression->_aggregate_function_arguments = function_arguments;
   expression->_alias = alias;
   return expression;

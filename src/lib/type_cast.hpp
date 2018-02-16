@@ -50,7 +50,13 @@ std::enable_if_t<std::is_integral<T>::value, T> type_cast(const AllTypeVariant& 
   try {
     return boost::lexical_cast<T>(value);
   } catch (...) {
-    return boost::numeric_cast<T>(boost::lexical_cast<double>(value));
+    auto s = type_cast<std::string>(value);
+    struct tm tm;
+    if(strptime(s.c_str(), "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
+      return boost::numeric_cast<T>(boost::lexical_cast<double>(value));
+    } else {
+      return static_cast<T>(mktime(&tm));
+    }
   }
 }
 

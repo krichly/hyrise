@@ -272,15 +272,15 @@ std::shared_ptr<AbstractLQPNode> SQLTranslator::_translate_select(const hsql::Se
   // because all elements must either be aggregate functions or columns of the GROUP BY clause,
   // so the Aggregate operator will handle them.
   auto is_aggregate = select.groupBy != nullptr;
-  if (!is_aggregate) {
-    for (auto* expr : *select.selectList) {
-      // TODO(anybody): Only consider aggregate functions here (i.e., SUM, COUNT, etc. - but not CONCAT, ...).
-      if (expr->isType(hsql::kExprFunctionRef)) {
-        is_aggregate = true;
-        break;
-      }
-    }
-  }
+  // if (!is_aggregate) {
+  //   for (auto* expr : *select.selectList) {
+  //     // TODO(anybody): Only consider aggregate functions here (i.e., SUM, COUNT, etc. - but not CONCAT, ...).
+  //     if (expr->isType(hsql::kExprFunctionRef)) {
+  //       is_aggregate = true;
+  //       break;
+  //     }
+  //   }
+  // }
 
   if (is_aggregate) {
     current_result_node = _translate_aggregate(select, current_result_node);
@@ -741,7 +741,8 @@ std::shared_ptr<AbstractLQPNode> SQLTranslator::_translate_projection(
     const auto expr = HSQLExprTranslator::to_lqp_expression(*select_column_hsql_expr, input_node);
 
     DebugAssert(expr->type() == ExpressionType::Star || expr->type() == ExpressionType::Column ||
-                    expr->is_arithmetic_operator() || expr->type() == ExpressionType::Literal,
+                    expr->is_arithmetic_operator() || expr->type() == ExpressionType::Literal ||
+                    expr->type()  == ExpressionType::DatetimeFunction,
                 "Only column references, star-selects, and arithmetic expressions supported for now.");
 
     if (expr->type() == ExpressionType::Star) {

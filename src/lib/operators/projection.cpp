@@ -91,7 +91,7 @@ std::shared_ptr<const Table> Projection::_on_execute() {
       name = *column_expression->alias();
     } else if (column_expression->type() == ExpressionType::Column) {
       name = _input_table_left()->column_name(column_expression->column_id());
-    } else if (column_expression->is_arithmetic_operator() || column_expression->type() == ExpressionType::Literal) {
+    } else if (column_expression->is_arithmetic_operator() || column_expression->type() == ExpressionType::Literal || column_expression->type() == ExpressionType::DatetimeFunction) {
       name = column_expression->to_string(_input_table_left()->column_names());
     } else {
       Fail("Expression type is not supported.");
@@ -134,6 +134,9 @@ DataType Projection::_get_type_of_expression(const std::shared_ptr<PQPExpression
   }
   if (expression->type() == ExpressionType::Column) {
     return table->column_type(expression->column_id());
+  }
+  if (expression->type() == ExpressionType::DatetimeFunction) {
+    return DataType::Long;
   }
 
   Assert(expression->is_arithmetic_operator(),
@@ -192,12 +195,59 @@ const pmr_concurrent_vector<std::optional<T>> Projection::_evaluate_expression(
   /**
    * Handle arithmetic expression
    */
-  Assert(expression->is_arithmetic_operator(), "Projection only supports literals, column refs and arithmetics");
-
-  const auto& arithmetic_operator_function = _get_operator_function<T>(expression->type());
+  Assert(expression->is_arithmetic_operator() || expression->type() == ExpressionType::DatetimeFunction, "Projection only supports literals, column refs and arithmetics");
 
   pmr_concurrent_vector<std::optional<T>> values;
   values.resize(table->get_chunk(chunk_id)->size());
+
+  //datetimes are int
+  if (expression->type() == ExpressionType::DatetimeFunction) {
+    if constexpr(std::is_same_v<T, int64_t>) {
+      std::function<int64_t(const struct tm&)> op;
+      switch (expression->datetime_function()) {
+        case DatetimeFunction::Year:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_year + 1900;};
+          break;
+        case DatetimeFunction::Month:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_mon + 1;};
+          break;
+        case DatetimeFunction::Day:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_mday;};
+          break;
+        case DatetimeFunction::Hour:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_hour;};
+          break;
+        case DatetimeFunction::Minute:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_min;};
+          break;
+        case DatetimeFunction::Second:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_sec;};
+          break;
+        default:
+          Fail("Unknown DatetimeFunction");
+      }
+
+      auto func = [&](std::optional<T> time) -> std::optional<T> {
+        if (!time) return std::nullopt;
+        time_t t = time.value();
+        struct tm* tm = localtime(&t);
+        return op(*tm);
+      };
+
+      Assert(expression->aggregate_function_arguments().size() == 1, "Too many arguments.");
+      const auto& expr = expression->aggregate_function_arguments().at(0);
+      const auto left_values = _evaluate_expression<int64_t>(expr, table, chunk_id);
+      // auto func = [&](std::optional<T> left_value) -> std::optional<T> {
+      // if (!left_value) return std::nullopt;
+      // return arithmetic_operator_function(*left_value, right_value);
+      std::transform(left_values.begin(), left_values.end(), values.begin(), func);
+      return values;
+    } else {
+      Fail("Called datetime function on invalid column type.");
+    }
+  }
+
+  const auto& arithmetic_operator_function = _get_operator_function<T>(expression->type());
 
   const auto& left = expression->left_child();
   const auto& right = expression->right_child();

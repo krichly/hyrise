@@ -61,17 +61,30 @@ std::shared_ptr<LQPExpression> HSQLExprTranslator::to_lqp_expression(
       std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
 
       const auto aggregate_function_iter = aggregate_function_to_string.right.find(name);
-      DebugAssert(aggregate_function_iter != aggregate_function_to_string.right.end(),
-                  std::string("No such aggregate function '") + name + "'");
 
-      auto aggregate_function = aggregate_function_iter->second;
+      // func is an aggregate function
+      if (aggregate_function_iter != aggregate_function_to_string.right.end()) {
+        // DebugAssert(aggregate_function_iter != aggregate_function_to_string.right.end(),
+            // std::string("No such aggregate function '") + name + "'");
+        auto aggregate_function = aggregate_function_iter->second;
 
-      if (aggregate_function == AggregateFunction::Count && expr.distinct) {
-        aggregate_function = AggregateFunction::CountDistinct;
+        if (aggregate_function == AggregateFunction::Count && expr.distinct) {
+          aggregate_function = AggregateFunction::CountDistinct;
+        }
+
+        node = LQPExpression::create_aggregate_function(aggregate_function, aggregate_function_arguments, alias);
+        break;
+      } else { // let's try datetime functions instead
+        const auto datetime_function_iter = datetime_function_to_string.right.find(name);
+        DebugAssert(datetime_function_iter != datetime_function_to_string.right.end(),
+            std::string("No such aggregate/datetime function '") + name + "'");
+
+        auto datetime_function = datetime_function_iter->second;
+
+        node = LQPExpression::create_datetime_function(datetime_function, aggregate_function_arguments, alias);
+        break;
       }
 
-      node = LQPExpression::create_aggregate_function(aggregate_function, aggregate_function_arguments, alias);
-      break;
     }
     case hsql::kExprLiteralFloat:
       node = LQPExpression::create_literal(expr.fval, alias);

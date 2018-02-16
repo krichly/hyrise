@@ -67,6 +67,10 @@ class AbstractExpression : public std::enable_shared_from_this<DerivedExpression
       AggregateFunction aggregate_function, const std::vector<std::shared_ptr<DerivedExpression>>& function_arguments,
       const std::optional<std::string>& alias = std::nullopt);
 
+  static std::shared_ptr<DerivedExpression> create_datetime_function(
+      DatetimeFunction datetime_function, const std::vector<std::shared_ptr<DerivedExpression>>& function_arguments,
+      const std::optional<std::string>& alias = std::nullopt);
+
   static std::shared_ptr<DerivedExpression> create_binary_operator(
       ExpressionType type, const std::shared_ptr<DerivedExpression>& left,
       const std::shared_ptr<DerivedExpression>& right, const std::optional<std::string>& alias = std::nullopt);
@@ -131,6 +135,7 @@ class AbstractExpression : public std::enable_shared_from_this<DerivedExpression
    * Getters. Only call them if you are sure the type() has such a member
    */
   AggregateFunction aggregate_function() const;
+  DatetimeFunction datetime_function() const;
   const AllTypeVariant value() const;
   const std::vector<std::shared_ptr<DerivedExpression>>& aggregate_function_arguments() const;
   ValuePlaceholder value_placeholder() const;
@@ -167,6 +172,7 @@ class AbstractExpression : public std::enable_shared_from_this<DerivedExpression
   std::optional<AllTypeVariant> _value;
 
   std::optional<AggregateFunction> _aggregate_function;
+  std::optional<DatetimeFunction> _datetime_function;
 
   /*
    * A list of Expressions used in FunctionIdentifiers and CASE Expressions.
