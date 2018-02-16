@@ -232,7 +232,7 @@ enum class UnionMode { Positions };
 
 enum class AggregateFunction { Min, Max, Sum, Avg, Count, CountDistinct };
 
-enum class DatetimeFunction { Year, Month, Day };
+enum class DatetimeFunction { Year, Month, Day, Hour, Minute, Second };
 
 enum class OrderByMode { Ascending, Descending, AscendingNullsLast, DescendingNullsLast };
 

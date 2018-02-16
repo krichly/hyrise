@@ -214,6 +214,15 @@ const pmr_concurrent_vector<std::optional<T>> Projection::_evaluate_expression(
         case DatetimeFunction::Day:
           op = [](const struct tm& tm) -> int64_t { return tm.tm_mday;};
           break;
+        case DatetimeFunction::Hour:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_hour;};
+          break;
+        case DatetimeFunction::Minute:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_min;};
+          break;
+        case DatetimeFunction::Second:
+          op = [](const struct tm& tm) -> int64_t { return tm.tm_sec;};
+          break;
         default:
           Fail("Unknown DatetimeFunction");
       }

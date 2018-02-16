@@ -137,6 +137,9 @@ const boost::bimap<DatetimeFunction, std::string> datetime_function_to_string =
         {DatetimeFunction::Year, "YEAR"},
         {DatetimeFunction::Month, "MONTH"},
         {DatetimeFunction::Day, "DAY"},
+        {DatetimeFunction::Hour, "HOUR"},
+        {DatetimeFunction::Minute, "MINUTE"},
+        {DatetimeFunction::Second, "SECOND"},
     });
 
 const boost::bimap<DataType, std::string> data_type_to_string =
